@@ -4,28 +4,39 @@ const Entries = require('../models/Entries');
 const Patient = require('../models/Patient');
 
 EntriesRouter.get('/', async (request, response) => {
-  const entries = await Entries.find({});
+  const entries = await Entries.find({}).populate('patient');
   response.send(entries);
 });
 
 EntriesRouter.post('/', async (request, response) => {
-  const body = request.body;
+  const { body } = request;
+  let patientId;
 
   const patient = await Patient.findById(body.userId);
-  console.log(patient);
+  if (patient) {
+    patientId = patient._id;
+    console.log(patient);
+  }
 
   const entry = new Entries({
+    hour: body.hour,
     date: body.date,
-    specialist: body.specialist,
-    type: body.type,
-    description: body.description,
-    patient: patient._id,
+    phoneNumber: body.phoneNumber,
+    facilityPlace: body.facilityPlace,
+    firstName: body.firstName,
+    surname: body.surname,
+    patient: patientId,
   });
+
+  console.log(entry);
 
   const savedEntry = await entry.save();
 
-  patient.entries = patient.entries.concat(savedEntry._id);
-  await patient.save();
+  if (patient) {
+    patient.entries = patient.entries.concat(savedEntry._id);
+    await patient.save();
+    console.log(patient);
+  }
   response.send(savedEntry);
   response.status(200).end();
 });

@@ -87,7 +87,7 @@ PatientRouter.post('/', async (request, response, next) => {
     });
 
     const savedPatient = await patient.save();
-    user.patients = user.patients.concat(savedPatient._id);
+    user.patients = savedPatient._id;
     await user.save();
     response.json(savedPatient);
     response.status(200).end();
