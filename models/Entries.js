@@ -1,12 +1,14 @@
 const mongoose = require('mongoose');
 
 const entriesSchema = new mongoose.Schema({
-  date: String,
-  specialist: String,
-  type: String,
-  description: String,
+  hour: String,
+  data: String,
+  phoneNumber: String,
+  facilityPlace: String,
+  firstName: String,
+  surname: String,
   patient: {
-    type: [mongoose.Schema.Types.ObjectId],
+    type: mongoose.Schema.Types.ObjectId,
     ref: 'Patient',
   },
 });
