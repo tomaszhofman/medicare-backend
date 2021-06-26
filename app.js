@@ -7,6 +7,8 @@ const PatientRouter = require('./controllers/Patients');
 const mongoose = require('mongoose');
 const middleware = require('./utils/middleware');
 const EntriesRouter = require('./controllers/Entries');
+const UsersRouter = require('./controllers/Users');
+const loginRouter = require('./controllers/Login');
 
 console.log('connecting to ', config.MONGODB_URL);
 
@@ -30,6 +32,8 @@ app.use(express.json());
 
 app.use('/api/patients', PatientRouter);
 app.use('/api/entries', EntriesRouter);
+app.use('/api/users', UsersRouter);
+app.use('/api/login', loginRouter);
 
 app.use(middleware.unknownEndpoint);
 app.use(middleware.errorHandler);

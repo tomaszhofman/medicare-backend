@@ -3,11 +3,16 @@ const mongoose = require('mongoose');
 const patientSchema = new mongoose.Schema({
   name: { type: String, required: true },
   dateOfBirth: String,
+  ssn: Number,
   gender: String,
   occupation: String,
   entries: {
     type: [mongoose.Schema.Types.ObjectId],
     ref: 'Entries',
+  },
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
   },
 });
 
