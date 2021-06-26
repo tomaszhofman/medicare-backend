@@ -1,11 +1,14 @@
 const { response } = require('express');
 const mongoose = require('mongoose');
+
+const jwt = require('jsonwebtoken');
 const { findOne } = require('../models/Patient');
 const PatientRouter = require('express').Router();
 const Patient = require('../models/Patient');
+const User = require('../models/User');
 
 PatientRouter.get('/', async (request, response) => {
-  const patients = await Patient.find({}).populate('entries');
+  const patients = await Patient.find({}).populate('user');
 
   response.json(patients);
 });
@@ -14,14 +17,13 @@ PatientRouter.post('/search', async (request, response) => {
   const { name } = request.body;
   const searchPhrase = await Patient.find({
     name: {
-      $regex: '^' + name + '\\b',
+      $regex: `^${name}\\b`,
       $options: 'i',
     },
   });
-  console.log(searchPhrase.length);
+
   if (searchPhrase.length === 0) {
-    const test = response.json([{ error: 'No results found' }]);
-    console.log(test);
+    response.json([{ error: 'No results found' }]);
     response.status(200);
   } else {
     response.json(searchPhrase);
@@ -37,19 +39,56 @@ PatientRouter.get('/:id', async (request, response) => {
   response.status(200);
 });
 
+const getTokenFrom = (request) => {
+  const authorization = request.get('authorization');
+  if (authorization && authorization.toLowerCase().startsWith('bearer ')) {
+    return authorization.substring(7);
+  }
+  return null;
+};
+
 PatientRouter.post('/', async (request, response, next) => {
-  const { name, dateOfBirth, gender, occupation } = request.body;
-
-  console.log(name);
-
-  const patient = new Patient({
-    name,
-    dateOfBirth,
-    gender,
-    occupation,
-  });
   try {
+    const {
+      PESEL,
+      city,
+      country,
+      dateOfBith,
+      flat,
+      gender,
+      houseNumber,
+      name,
+      postalCode,
+      street,
+      userId,
+    } = request.body;
+
+    const token = getTokenFrom(request);
+    const decodedToken = jwt.verify(token, process.env.SECRET);
+    if (!token || !decodedToken.id) {
+      return response.status(401).json({ error: 'token missing' });
+    }
+
+    const user = await User.findById(decodedToken.id);
+    console.log(user);
+
+    const patient = new Patient({
+      name,
+      PESEL,
+      city,
+      gender,
+      country,
+      dateOfBith,
+      houseNumber,
+      flat,
+      postalCode,
+      street,
+      user: user._id,
+    });
+
     const savedPatient = await patient.save();
+    user.patients = user.patients.concat(savedPatient._id);
+    await user.save();
     response.json(savedPatient);
     response.status(200).end();
   } catch (error) {
